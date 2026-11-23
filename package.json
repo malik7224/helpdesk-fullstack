@@ -1,0 +1,22 @@
+{
+  "name": "helpdesk-fullstack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A small full-stack helpdesk: Next.js web app and Node.js API.",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "seed": "npm run seed -w apps/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
