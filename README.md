@@ -28,7 +28,7 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
 | API | Node.js, Express 5, TypeScript, Zod 4 for validation |
 | Data | SQLite through Node's built-in `node:sqlite` (no native build step) |
 | Auth | scrypt password hashing, JWT (HS256) |
-| Quality | Vitest, Supertest, ESLint, GitHub Actions CI |
+| Quality | Vitest, Supertest, ESLint (both apps), GitHub Actions CI |
 
 ## Architecture
 
@@ -84,7 +84,7 @@ Both apps work without any setup. To change settings, copy `apps/api/.env.exampl
 | `npm run dev:api` / `npm run dev:web` | Start a dev server with reload |
 | `npm test` | Run all tests (API and web) |
 | `npm run typecheck` | Type-check both apps |
-| `npm run lint` | Lint the web app |
+| `npm run lint` | Lint both apps |
 | `npm run build` | Build both apps |
 
 ## API overview
