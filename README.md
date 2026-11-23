@@ -128,7 +128,7 @@ These are deliberate simplifications for a demo, and where I would go next:
 
 ## Tests
 
-
+67 automated tests: 48 for the API (auth and cookie sessions, comments, roles, validation, search, paging, expired and forged tokens, rate limiting) and 19 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
 
 ```bash
 npm test
