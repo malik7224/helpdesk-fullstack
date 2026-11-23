@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, ApiError, describeError, TOKEN_KEY, UNAUTHORIZED_EVENT } from "@/lib/api";
+import { api, ApiError, describeError, UNAUTHORIZED_EVENT } from "@/lib/api";
 
 const fetchMock = vi.fn();
 
@@ -20,7 +20,6 @@ function lastRequest() {
 
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
-  localStorage.clear();
 });
 
 afterEach(() => {
@@ -29,7 +28,7 @@ afterEach(() => {
 });
 
 describe("api client", () => {
-  it("sends credentials as JSON and no Authorization header when signed out", async () => {
+  it("sends credentials as JSON and never sets an Authorization header", async () => {
     respond(200, { token: "t", user: { id: 1 } });
     await api.login("a@demo.test", "secret-pass");
 
@@ -41,11 +40,18 @@ describe("api client", () => {
     expect(headers.has("Authorization")).toBe(false);
   });
 
-  it("attaches the saved token as a Bearer header", async () => {
-    localStorage.setItem(TOKEN_KEY, "saved-token");
+  it("sends the session cookie with every request", async () => {
     respond(200, { user: { id: 1 } });
     await api.me();
-    expect(lastRequest().headers.get("Authorization")).toBe("Bearer saved-token");
+    expect(lastRequest().init.credentials).toBe("include");
+    expect(lastRequest().headers.has("Authorization")).toBe(false);
+  });
+
+  it("logs out with a POST", async () => {
+    respond(204);
+    await api.logout();
+    expect(lastRequest().url).toMatch(/\/auth\/logout$/);
+    expect(lastRequest().init.method).toBe("POST");
   });
 
   it("builds the ticket query and skips empty filters", async () => {
@@ -87,31 +93,25 @@ describe("api client", () => {
 });
 
 describe("expired sessions", () => {
-  it("signals sign-out when a 401 arrives while holding a token", async () => {
-    localStorage.setItem(TOKEN_KEY, "old");
+  it("signals sign-out when a normal request comes back 401", async () => {
     const listener = vi.fn();
     window.addEventListener(UNAUTHORIZED_EVENT, listener);
 
     respond(401, { error: "Invalid or expired token" });
-    await api.me().catch(() => undefined);
+    await api.listTickets().catch(() => undefined);
 
     expect(listener).toHaveBeenCalledTimes(1);
     window.removeEventListener(UNAUTHORIZED_EVENT, listener);
   });
 
-  it("does not sign out on a failed login or when there was no token", async () => {
+  it("does not sign out on a failed login or when checking for a session", async () => {
     const listener = vi.fn();
     window.addEventListener(UNAUTHORIZED_EVENT, listener);
 
     respond(401, { error: "Invalid email or password" });
     await api.login("a@demo.test", "wrong").catch(() => undefined);
 
-    localStorage.setItem(TOKEN_KEY, "stale");
-    respond(401, { error: "Invalid email or password" });
-    await api.login("a@demo.test", "wrong").catch(() => undefined);
-
     respond(401, { error: "Authentication required" });
-    localStorage.clear();
     await api.me().catch(() => undefined);
 
     expect(listener).not.toHaveBeenCalled();

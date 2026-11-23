@@ -14,5 +14,8 @@ export const config = {
   dbPath: process.env.DB_PATH ?? "helpdesk.db",
   jwtSecret: readJwtSecret(),
   jwtExpiresIn: "8h",
+  // Keep in step with jwtExpiresIn.
+  sessionMaxAgeMs: 8 * 60 * 60 * 1000,
+  cookieSecure: process.env.NODE_ENV === "production",
   webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
 } as const;

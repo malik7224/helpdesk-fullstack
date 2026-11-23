@@ -91,3 +91,73 @@ describe("GET /auth/me", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("cookie sessions", () => {
+  const WEB = "http://localhost:3000";
+
+  async function loginWithCookie(app: Parameters<typeof request>[0]) {
+    const res = await request(app).post("/auth/login").send({ email: "agent@test.dev", password: TEST_PASSWORD });
+    const cookie = (res.headers["set-cookie"] as unknown as string[])[0]!;
+    return { res, cookie, pair: cookie.split(";")[0]! };
+  }
+
+  it("sets an httpOnly, SameSite=Lax session cookie on login", async () => {
+    const { app } = await setup();
+    const { cookie } = await loginWithCookie(app);
+    expect(cookie).toMatch(/^helpdesk_session=/);
+    expect(cookie).toMatch(/HttpOnly/i);
+    expect(cookie).toMatch(/SameSite=Lax/i);
+    expect(cookie).toMatch(/Max-Age=28800/);
+    expect(cookie).not.toMatch(/Secure/i);
+  });
+
+  it("marks the cookie Secure when configured for production", async () => {
+    const { app, db } = buildApp({ cookieSecure: true });
+    await insertUser(db, "agent@test.dev", "agent");
+    const { cookie } = await loginWithCookie(app);
+    expect(cookie).toMatch(/Secure/);
+  });
+
+  it("accepts the cookie instead of a Bearer header", async () => {
+    const { app } = await setup();
+    const { pair } = await loginWithCookie(app);
+    const res = await request(app).get("/auth/me").set("Cookie", pair);
+    expect(res.status).toBe(200);
+    expect(res.body.user.email).toBe("agent@test.dev");
+  });
+
+  it("rejects a tampered cookie", async () => {
+    const { app } = await setup();
+    const res = await request(app).get("/auth/me").set("Cookie", "helpdesk_session=garbage");
+    expect(res.status).toBe(401);
+  });
+
+  it("clears the cookie on logout", async () => {
+    const { app } = await setup();
+    const res = await request(app).post("/auth/logout");
+    expect(res.status).toBe(204);
+    const cookie = (res.headers["set-cookie"] as unknown as string[])[0]!;
+    expect(cookie).toMatch(/^helpdesk_session=;/);
+    expect(cookie).toMatch(/Expires=Thu, 01 Jan 1970/);
+  });
+
+  it("blocks cookie-authenticated writes from another origin", async () => {
+    const { app } = await setup();
+    const { pair } = await loginWithCookie(app);
+    const body = { title: "Cross-site ticket" };
+
+    const evil = await request(app).post("/tickets").set("Cookie", pair).set("Origin", "https://evil.example").send(body);
+    expect(evil.status).toBe(403);
+    const none = await request(app).post("/tickets").set("Cookie", pair).send(body);
+    expect(none.status).toBe(403);
+    const ok = await request(app).post("/tickets").set("Cookie", pair).set("Origin", WEB).send(body);
+    expect(ok.status).toBe(201);
+  });
+
+  it("allows the web origin to send credentials (CORS)", async () => {
+    const { app } = await setup();
+    const res = await request(app).options("/tickets").set("Origin", WEB);
+    expect(res.headers["access-control-allow-credentials"]).toBe("true");
+    expect(res.headers["access-control-allow-origin"]).toBe(WEB);
+  });
+});
