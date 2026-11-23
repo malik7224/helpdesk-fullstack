@@ -3,6 +3,7 @@ import type { Db } from "../db.js";
 import { badRequest, notFound } from "../errors.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import {
+  createCommentSchema,
   createTicketSchema,
   idParam,
   listTicketsQuery,
@@ -18,6 +19,13 @@ const SELECT_TICKET = `
   JOIN users c ON c.id = t.created_by
   LEFT JOIN users a ON a.id = t.assignee_id`;
 
+const SELECT_COMMENT = `
+  SELECT m.id, m.ticket_id AS ticketId, m.body,
+         m.author_id AS authorId, u.name AS authorName,
+         m.created_at AS createdAt
+  FROM comments m
+  JOIN users u ON u.id = m.author_id`;
+
 type SqlValue = string | number | null;
 
 /** Escapes % and _ so a search for "100%" matches the text, not "everything". */
@@ -30,6 +38,7 @@ export function createTicketsRouter(db: Db, secret: string) {
   router.use(authenticate(db, secret));
 
   const userExists = db.prepare("SELECT 1 FROM users WHERE id = ?");
+  const ticketExists = db.prepare("SELECT 1 FROM tickets WHERE id = ?");
   const getTicket = db.prepare(`${SELECT_TICKET} WHERE t.id = ?`);
 
   function assertAssignee(assigneeId: number | null | undefined) {
@@ -125,6 +134,30 @@ export function createTicketsRouter(db: Db, secret: string) {
     if (result.changes === 0) throw notFound("Ticket not found");
 
     res.json({ ticket: getTicket.get(id) });
+  });
+
+  router.get("/:id/comments", (req, res) => {
+    const id = idParam.parse(req.params.id);
+    if (!ticketExists.get(id)) throw notFound("Ticket not found");
+    const comments = db
+      .prepare(`${SELECT_COMMENT} WHERE m.ticket_id = ? ORDER BY m.created_at ASC, m.id ASC`)
+      .all(id);
+    res.json({ comments });
+  });
+
+  router.post("/:id/comments", (req, res) => {
+    const id = idParam.parse(req.params.id);
+    const input = createCommentSchema.parse(req.body);
+    if (!ticketExists.get(id)) throw notFound("Ticket not found");
+
+    const result = db
+      .prepare("INSERT INTO comments (ticket_id, author_id, body) VALUES (?, ?, ?)")
+      .run(id, req.user!.id, input.body);
+    // A new comment counts as activity, so the ticket moves to the top of the list.
+    db.prepare("UPDATE tickets SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?").run(id);
+
+    const comment = db.prepare(`${SELECT_COMMENT} WHERE m.id = ?`).get(Number(result.lastInsertRowid));
+    res.status(201).json({ comment });
   });
 
   router.delete("/:id", requireRole("admin"), (req, res) => {

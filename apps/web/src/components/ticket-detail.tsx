@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "./auth-provider";
 import { PriorityBadge, StatusBadge } from "./badges";
+import { Comments } from "./comments";
 import { cardClass, dangerButton, ghostButton, inputClass, labelClass, primaryButton } from "./ui";
 
 type Loaded = { id: number; ticket: Ticket; error?: undefined } | { id: number; ticket?: undefined; error: string };
@@ -269,6 +270,8 @@ export function TicketDetail() {
           </select>
         </div>
       </div>
+
+      <Comments ticketId={id} />
 
       <p
         role={notice?.kind === "error" ? "alert" : "status"}

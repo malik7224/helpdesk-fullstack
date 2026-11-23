@@ -34,6 +34,10 @@ export const updateTicketSchema = z
   .partial()
   .refine((value) => Object.keys(value).length > 0, "Provide at least one field to update");
 
+export const createCommentSchema = z.object({
+  body: z.string().trim().min(1, "Comment cannot be empty").max(2000),
+});
+
 export const listTicketsQuery = z.object({
   q: z.string().trim().max(100).optional(),
   status: z.enum(STATUSES).optional(),
