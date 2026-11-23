@@ -11,3 +11,10 @@ coverage/
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# iOS (the Xcode project is generated from apps/mobile/project.yml)
+apps/mobile/Helpdesk.xcodeproj
+apps/mobile/Helpdesk/Info.plist
+xcuserdata/
+DerivedData/
+*.xcresult

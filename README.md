@@ -1,6 +1,6 @@
 # Helpdesk
 
-A small full-stack helpdesk. Agents sign in, then create, search, assign and resolve support tickets. Built with a **Next.js** web app and a **Node.js** REST API.
+A small full-stack helpdesk. Agents sign in, then create, search, assign and resolve support tickets. Built with a **Next.js** web app, a **Node.js** REST API and a native **iPhone** app.
 
 [![CI](https://github.com/malik7224/helpdesk-fullstack/actions/workflows/ci.yml/badge.svg)](https://github.com/malik7224/helpdesk-fullstack/actions/workflows/ci.yml)
 
@@ -10,6 +10,13 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
 <p>
   <img src="docs/screenshots/ticket-detail.png" alt="Ticket detail with status, priority and assignee controls" width="66%">
   <img src="docs/screenshots/mobile.png" alt="Ticket list on a phone" width="30%">
+</p>
+
+Also on iPhone: [a native SwiftUI client](apps/mobile) that uses the same API.
+
+<p>
+  <img src="docs/screenshots/ios-tickets.png" alt="iPhone app: ticket list" width="24%">
+  <img src="docs/screenshots/ios-ticket-detail.png" alt="iPhone app: ticket with comments" width="24%">
 </p>
 
 ## Features
@@ -28,6 +35,7 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
 | Web | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
 | API | Node.js, Express 5, TypeScript, Zod 4 for validation |
 | Data | SQLite through Node's built-in `node:sqlite` (no native build step) |
+| iPhone | SwiftUI, Swift 6, `async/await`, Keychain, XCTest |
 | Auth | scrypt password hashing, JWT (HS256) |
 | Quality | Vitest, Supertest, ESLint (both apps), GitHub Actions CI |
 
@@ -46,6 +54,7 @@ An npm-workspaces monorepo. The web app is a client of the API and shares no cod
 apps/
   api/   Express API: routes, auth, validation, database, tests
   web/   Next.js app: pages, components, API client, tests
+  mobile/ SwiftUI iPhone app (see apps/mobile/README.md)
 docs/    Screenshots
 ```
 
@@ -128,7 +137,7 @@ These are deliberate simplifications for a demo, and where I would go next:
 
 ## Tests
 
-67 automated tests: 48 for the API (auth and cookie sessions, comments, roles, validation, search, paging, expired and forged tokens, rate limiting) and 19 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
+67 automated tests: 48 for the API (auth and cookie sessions, comments, roles, validation, search, paging, expired and forged tokens, rate limiting) and 19 for the web client. They run on every push through GitHub Actions on Node 22 and 24. The iPhone app adds 9 unit tests that run on macOS in CI, plus end-to-end UI tests you run locally.
 
 ```bash
 npm test
