@@ -16,6 +16,7 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
 
 - **Sign in** with email and password. Sessions use signed tokens that expire after 8 hours.
 - **Tickets**: create, edit, view, and delete (admins only).
+- **Comments**: a discussion thread on every ticket.
 - **Search and filters**: text search over title and description, plus status, priority and assignee, with paging.
 - **Roles**: *agents* work tickets, *admins* also manage users and delete tickets.
 - **Responsive** layout that works on a phone.
@@ -100,6 +101,8 @@ Both apps work without any setup. To change settings, copy `apps/api/.env.exampl
 | `POST /tickets` | signed in | Create a ticket |
 | `GET /tickets/:id` | signed in | One ticket |
 | `PATCH /tickets/:id` | signed in | Update any ticket fields |
+| `GET /tickets/:id/comments` | signed in | List a ticket's comments, oldest first |
+| `POST /tickets/:id/comments` | signed in | Add a comment (1 to 2000 characters) |
 | `DELETE /tickets/:id` | admin | Delete a ticket |
 
 Errors are JSON: `{ "error": "..." }`, and validation errors add an `issues` list of `{ path, message }`.
@@ -119,11 +122,11 @@ These are deliberate simplifications for a demo, and where I would go next:
 
 - The web app stores the token in `localStorage`. A production app should use an `httpOnly` cookie to reduce the impact of XSS.
 - The rate limiter is in memory, so it works for one server process only. Several instances need a shared store such as Redis.
-- No password reset, refresh tokens, ticket comments or audit log.
+- No password reset, refresh tokens or audit log. Comments cannot be edited or deleted yet.
 
 ## Tests
 
-52 automated tests: 36 for the API (auth, roles, validation, search, paging, expired and forged tokens, rate limiting) and 16 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
+59 automated tests: 41 for the API (auth, roles, validation, search, paging, expired and forged tokens, rate limiting) and 18 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
 
 ```bash
 npm test

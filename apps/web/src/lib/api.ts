@@ -44,6 +44,15 @@ export interface Ticket {
   updatedAt: string;
 }
 
+export interface Comment {
+  id: number;
+  ticketId: number;
+  body: string;
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+}
+
 export interface Paged<T> {
   data: T[];
   page: number;
@@ -146,6 +155,15 @@ export const api = {
 
   updateTicket: (id: number, patch: TicketPatch) =>
     request<{ ticket: Ticket }>(`/tickets/${id}`, { method: "PATCH", body: json(patch) }),
+
+  listComments: (ticketId: number) =>
+    request<{ comments: Comment[] }>(`/tickets/${ticketId}/comments`),
+
+  addComment: (ticketId: number, body: string) =>
+    request<{ comment: Comment }>(`/tickets/${ticketId}/comments`, {
+      method: "POST",
+      body: json({ body }),
+    }),
 
   deleteTicket: (id: number) => request<void>(`/tickets/${id}`, { method: "DELETE" }),
 };

@@ -118,3 +118,21 @@ describe("expired sessions", () => {
     window.removeEventListener(UNAUTHORIZED_EVENT, listener);
   });
 });
+
+describe("comments", () => {
+  it("lists comments for a ticket", async () => {
+    respond(200, { comments: [{ id: 1, ticketId: 7, body: "Hi", authorId: 1, authorName: "A", createdAt: "x" }] });
+    const { comments } = await api.listComments(7);
+    expect(comments).toHaveLength(1);
+    expect(lastRequest().url).toMatch(/\/tickets\/7\/comments$/);
+  });
+
+  it("posts a comment as JSON", async () => {
+    respond(201, { comment: { id: 2, ticketId: 7, body: "Done", authorId: 1, authorName: "A", createdAt: "x" } });
+    await api.addComment(7, "Done");
+    const { init, url } = lastRequest();
+    expect(url).toMatch(/\/tickets\/7\/comments$/);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({ body: "Done" });
+  });
+});
