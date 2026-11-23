@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import type { Db } from "./db.js";
 import { HttpError } from "./errors.js";
 import { cors } from "./middleware/cors.js";
+import { requireTrustedOrigin } from "./middleware/csrf.js";
 import { createRateLimiter, type RateLimitOptions } from "./middleware/rateLimit.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { createTicketsRouter } from "./routes/tickets.js";
@@ -17,6 +18,8 @@ export interface AppDeps {
   jwtExpiresIn?: SignOptions["expiresIn"];
   webOrigin?: string;
   loginRateLimit?: RateLimitOptions;
+  cookieSecure?: boolean;
+  sessionMaxAgeMs?: number;
 }
 
 export function createApp({
@@ -25,6 +28,8 @@ export function createApp({
   jwtExpiresIn = config.jwtExpiresIn,
   webOrigin = config.webOrigin,
   loginRateLimit = { max: 10, windowMs: 15 * 60 * 1000 },
+  cookieSecure = config.cookieSecure,
+  sessionMaxAgeMs = config.sessionMaxAgeMs,
 }: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
@@ -33,6 +38,7 @@ export function createApp({
     next();
   });
   app.use(cors(webOrigin));
+  app.use(requireTrustedOrigin(webOrigin));
   app.use(express.json({ limit: "100kb" }));
 
   app.get("/health", (_req, res) => {
@@ -48,6 +54,8 @@ export function createApp({
       secret: jwtSecret,
       expiresIn: jwtExpiresIn,
       loginLimiter: createRateLimiter(loginRateLimit),
+      cookieSecure,
+      cookieMaxAgeMs: sessionMaxAgeMs,
     }),
   );
   app.use("/users", createUsersRouter(db, jwtSecret));

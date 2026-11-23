@@ -14,7 +14,7 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
 
 ## Features
 
-- **Sign in** with email and password. Sessions use signed tokens that expire after 8 hours.
+- **Sign in** with email and password. Sessions use signed tokens in an httpOnly cookie that expire after 8 hours.
 - **Tickets**: create, edit, view, and delete (admins only).
 - **Search and filters**: text search over title and description, plus status, priority and assignee, with paging.
 - **Roles**: *agents* work tickets, *admins* also manage users and delete tickets.
@@ -92,7 +92,8 @@ Both apps work without any setup. To change settings, copy `apps/api/.env.exampl
 | Method and path | Who | Purpose |
 |---|---|---|
 | `GET /health` | anyone | Liveness and database check |
-| `POST /auth/login` | anyone | Exchange email and password for a token |
+| `POST /auth/login` | anyone | Sign in. Sets the session cookie and also returns the token for API clients |
+| `POST /auth/logout` | anyone | Clear the session cookie |
 | `GET /auth/me` | signed in | The current user |
 | `GET /users` | signed in | List users (for the assignee picker) |
 | `POST /users` | admin | Create a user |
@@ -109,6 +110,7 @@ Errors are JSON: `{ "error": "..." }`, and validation errors add an `issues` lis
 - **Accounts are created by admins**, not by open sign-up. A helpdesk should not let strangers become agents.
 - **Passwords** are hashed with scrypt and a per-user salt, and compared in constant time. Unknown emails and wrong passwords return the same error and take about the same time.
 - **Tokens are re-checked against the database** on every request, so a deleted user or changed role takes effect immediately.
+- **The session is an `httpOnly` cookie** (`SameSite=Lax`, `Secure` in production), so page scripts and XSS cannot read the token. Writes that rely on the cookie must come from the web app's origin, which blocks cross-site request forgery. API clients can still send `Authorization: Bearer <token>`.
 - **Login is rate limited** (10 attempts per 15 minutes per IP).
 - **Search is safe**: `%` and `_` in a query are matched as plain text.
 - **`node:sqlite`** keeps setup to one command. Swapping in PostgreSQL would only touch `db.ts` and the queries in the route files.
@@ -117,13 +119,13 @@ Errors are JSON: `{ "error": "..." }`, and validation errors add an `issues` lis
 
 These are deliberate simplifications for a demo, and where I would go next:
 
-- The web app stores the token in `localStorage`. A production app should use an `httpOnly` cookie to reduce the impact of XSS.
+- The cookie uses `SameSite=Lax`, so in production the web app and API must share a site (for example `app.example.com` and `api.example.com`). Deploying them on unrelated domains would need `SameSite=None` and a CSRF token.
 - The rate limiter is in memory, so it works for one server process only. Several instances need a shared store such as Redis.
 - No password reset, refresh tokens, ticket comments or audit log.
 
 ## Tests
 
-52 automated tests: 36 for the API (auth, roles, validation, search, paging, expired and forged tokens, rate limiting) and 16 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
+60 automated tests: 43 for the API (auth and cookie sessions, roles, validation, search, paging, expired and forged tokens, rate limiting) and 17 for the web client. They run on every push through GitHub Actions on Node 22 and 24.
 
 ```bash
 npm test

@@ -1,6 +1,5 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-export const TOKEN_KEY = "helpdesk.token";
 export const UNAUTHORIZED_EVENT = "helpdesk:unauthorized";
 
 export const STATUSES = ["open", "in_progress", "resolved", "closed"] as const;
@@ -81,23 +80,16 @@ export class ApiError extends Error {
   }
 }
 
-export function getStoredToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
+// The session lives in an httpOnly cookie that the API sets, so page scripts never see the token.
+const NO_SIGN_OUT_ON_401 = new Set(["/auth/login", "/auth/me", "/auth/logout"]);
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getStoredToken();
   const headers = new Headers(init.headers);
   if (init.body) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
 
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+    res = await fetch(`${BASE_URL}${path}`, { ...init, headers, credentials: "include" });
   } catch {
     throw new ApiError(0, "Cannot reach the server. Is the API running?");
   }
@@ -109,8 +101,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   } | null;
 
   if (!res.ok) {
-    // A 401 while holding a token means it expired or was revoked.
-    if (res.status === 401 && token && path !== "/auth/login") {
+    // A 401 on a normal request means the session expired or was revoked.
+    if (res.status === 401 && !NO_SIGN_OUT_ON_401.has(path)) {
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
     throw new ApiError(res.status, body?.error ?? res.statusText, body?.issues);
@@ -122,10 +114,12 @@ const json = (value: unknown) => JSON.stringify(value);
 
 export const api = {
   login: (email: string, password: string) =>
-    request<{ token: string; user: User }>("/auth/login", {
+    request<{ user: User }>("/auth/login", {
       method: "POST",
       body: json({ email, password }),
     }),
+
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
 
   me: () => request<{ user: User }>("/auth/me"),
 

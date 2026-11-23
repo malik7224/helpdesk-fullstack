@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, getStoredToken, TOKEN_KEY, UNAUTHORIZED_EVENT, type User } from "@/lib/api";
+import { api, UNAUTHORIZED_EVENT, type User } from "@/lib/api";
 
 type AuthState = { status: "loading" } | { status: "anon" } | { status: "authed"; user: User };
 
@@ -21,42 +21,31 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function clearToken() {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // Storage can be blocked (private mode); signing out still works in memory.
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
   const logout = useCallback(() => {
-    clearToken();
     setState({ status: "anon" });
+    // Ask the API to clear the cookie. If that fails the cookie simply expires on its own.
+    api.logout().catch(() => undefined);
   }, []);
 
-  // Restore the session from a saved token.
+  // Restore the session from the cookie, if there is one.
   useEffect(() => {
     let cancelled = false;
     async function restore() {
-      if (!getStoredToken()) {
-        setState({ status: "anon" });
-        return;
-      }
       try {
         const { user } = await api.me();
         if (!cancelled) setState({ status: "authed", user });
       } catch {
-        if (!cancelled) logout();
+        if (!cancelled) setState({ status: "anon" });
       }
     }
     void restore();
     return () => {
       cancelled = true;
     };
-  }, [logout]);
+  }, []);
 
   // The API client fires this when a request comes back 401 (expired token).
   useEffect(() => {
@@ -65,12 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logout]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { token, user } = await api.login(email, password);
-    try {
-      localStorage.setItem(TOKEN_KEY, token);
-    } catch {
-      // Without storage the session lasts until the page reloads.
-    }
+    const { user } = await api.login(email, password);
     setState({ status: "authed", user });
   }, []);
 

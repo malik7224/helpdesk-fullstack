@@ -1,16 +1,22 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import type { Db, Role } from "../db.js";
+import { readCookie, SESSION_COOKIE } from "../auth/cookie.js";
 import { forbidden, unauthorized } from "../errors.js";
 import type { AuthUser } from "../types.js";
 
-/** Reads `Authorization: Bearer <token>`, verifies it, and loads the user from the database. */
+/**
+ * Reads the token from `Authorization: Bearer <token>` (API clients) or from the session
+ * cookie (the web app), verifies it, and loads the user from the database.
+ */
 export function authenticate(db: Db, secret: string): RequestHandler {
   const findUser = db.prepare("SELECT id, email, name, role FROM users WHERE id = ?");
 
   return (req, _res, next) => {
     const header = req.headers.authorization;
-    const token = header?.startsWith("Bearer ") ? header.slice(7).trim() : undefined;
+    const token = header?.startsWith("Bearer ")
+      ? header.slice(7).trim()
+      : readCookie(req, SESSION_COOKIE);
     if (!token) throw unauthorized();
 
     let subject: number;
