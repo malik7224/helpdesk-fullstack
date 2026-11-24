@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="dev.malik7224.helpdesk.ApiClientTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-11-24T07:29:11.528Z" hostname="Maliks-MacBook-Pro.local" time="0.243">
+  <properties/>
+  <testcase name="an unreadable response is reported" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.167"/>
+  <testcase name="a 401 becomes an Unauthorized error" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.005"/>
+  <testcase name="a patch can assign and clear the assignee" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.001"/>
+  <testcase name="login posts JSON and returns the token and user" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.007"/>
+  <testcase name="reads dates with and without fractional seconds" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.009"/>
+  <testcase name="sends the token as a Bearer header" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.005"/>
+  <testcase name="adding a comment posts the text" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.005"/>
+  <testcase name="unknown status values fail loudly instead of guessing" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.0"/>
+  <testcase name="a bad server address is reported without crashing" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.002"/>
+  <testcase name="ticket list query skips empty filters" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.012"/>
+  <testcase name="updating sends PATCH with only the changed field" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.008"/>
+  <testcase name="an unreachable server is reported as a network error" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.009"/>
+  <testcase name="validation issues are joined into one message" classname="dev.malik7224.helpdesk.ApiClientTest" time="0.01"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

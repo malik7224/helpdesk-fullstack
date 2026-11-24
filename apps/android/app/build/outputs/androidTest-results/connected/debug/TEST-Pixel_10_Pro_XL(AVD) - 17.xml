@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="1" errors="0" skipped="0" time="0.000" timestamp="2026-11-24T07:18:01" hostname="localhost">
+  <testsuite name="dev.malik7224.helpdesk.EndToEndTest" tests="1" failures="1" errors="0" skipped="0" time="26.795" timestamp="2026-11-24T07:18:01" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="signInReadCommentAndCreate" classname="dev.malik7224.helpdesk.EndToEndTest" time="26.795">
+      <failure>androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 15000 ms
+	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:901)
+	at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:500)
+	at dev.malik7224.helpdesk.EndToEndTest.waitForTag(EndToEndTest.kt:45)
+	at dev.malik7224.helpdesk.EndToEndTest.waitForTag$default(EndToEndTest.kt:44)
+	at dev.malik7224.helpdesk.EndToEndTest.signInReadCommentAndCreate(EndToEndTest.kt:74)
+</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

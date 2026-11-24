@@ -25,11 +25,19 @@ final class EndToEndTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Tickets"].waitForExistence(timeout: 10))
     }
 
+    private func signOutIfNeeded(_ app: XCUIApplication) {
+        guard app.navigationBars["Tickets"].waitForExistence(timeout: 4) else { return }
+        app.buttons["Account"].tap()
+        app.buttons["Sign out"].tap()
+        app.buttons["Sign out"].tap() // Confirms the dialog.
+    }
+
     func testWrongPasswordShowsAnError() throws {
         let app = XCUIApplication()
         app.launch()
+        signOutIfNeeded(app)
         let email = app.textFields["Email"]
-        guard email.waitForExistence(timeout: 5) else { return } // already signed in from another test
+        XCTAssertTrue(email.waitForExistence(timeout: 10))
         snap(app, "1-login")
         email.tap()
         email.typeText("agent@demo.test")
