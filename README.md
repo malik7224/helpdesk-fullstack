@@ -1,6 +1,6 @@
 # Helpdesk
 
-A small full-stack helpdesk. Agents sign in, then create, search, assign and resolve support tickets. Built with a **Next.js** web app, a **Node.js** REST API and a native **iPhone** app.
+A small full-stack helpdesk. Agents sign in, then create, search, assign and resolve support tickets. Built with a **Next.js** web app, a **Node.js** REST API, and native **iPhone** and **Android** apps.
 
 [![CI](https://github.com/malik7224/helpdesk-fullstack/actions/workflows/ci.yml/badge.svg)](https://github.com/malik7224/helpdesk-fullstack/actions/workflows/ci.yml)
 
@@ -12,11 +12,13 @@ A small full-stack helpdesk. Agents sign in, then create, search, assign and res
   <img src="docs/screenshots/mobile.png" alt="Ticket list on a phone" width="30%">
 </p>
 
-Also on iPhone: [a native SwiftUI client](apps/mobile) that uses the same API.
+Also on mobile: [a native SwiftUI iPhone app](apps/mobile) and [a Kotlin Android app](apps/android) that use the same API.
 
 <p>
   <img src="docs/screenshots/ios-tickets.png" alt="iPhone app: ticket list" width="24%">
   <img src="docs/screenshots/ios-ticket-detail.png" alt="iPhone app: ticket with comments" width="24%">
+  <img src="docs/screenshots/android-tickets.png" alt="Android app: ticket list" width="24%">
+  <img src="docs/screenshots/android-ticket-detail.png" alt="Android app: ticket with comments" width="24%">
 </p>
 
 ## Features
@@ -36,6 +38,7 @@ Also on iPhone: [a native SwiftUI client](apps/mobile) that uses the same API.
 | API | Node.js, Express 5, TypeScript, Zod 4 for validation |
 | Data | SQLite through Node's built-in `node:sqlite` (no native build step) |
 | iPhone | SwiftUI, Swift 6, `async/await`, Keychain, XCTest |
+| Android | Kotlin, Jetpack Compose, Material 3, OkHttp, Android Keystore, JUnit |
 | Auth | scrypt password hashing, JWT (HS256) |
 | Quality | Vitest, Supertest, ESLint (both apps), GitHub Actions CI |
 
@@ -55,6 +58,7 @@ apps/
   api/   Express API: routes, auth, validation, database, tests
   web/   Next.js app: pages, components, API client, tests
   mobile/ SwiftUI iPhone app (see apps/mobile/README.md)
+  android/ Kotlin Android app (see apps/android/README.md)
 docs/    Screenshots
 ```
 
@@ -137,7 +141,7 @@ These are deliberate simplifications for a demo, and where I would go next:
 
 ## Tests
 
-67 automated tests: 48 for the API (auth and cookie sessions, comments, roles, validation, search, paging, expired and forged tokens, rate limiting) and 19 for the web client. They run on every push through GitHub Actions on Node 22 and 24. The iPhone app adds 9 unit tests that run on macOS in CI, plus end-to-end UI tests you run locally.
+67 automated tests: 48 for the API (auth and cookie sessions, comments, roles, validation, search, paging, expired and forged tokens, rate limiting) and 19 for the web client. They run on every push through GitHub Actions on Node 22 and 24. The iPhone app adds 9 unit tests that run on macOS in CI, and the Android app adds 13 unit tests. Both mobile apps also have end-to-end UI tests that you run locally against a running API.
 
 ```bash
 npm test
