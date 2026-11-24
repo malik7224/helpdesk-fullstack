@@ -78,8 +78,11 @@ struct LoginView: View {
         defer { busy = false }
         do {
             try await auth.signIn(email: email.trimmingCharacters(in: .whitespaces), password: password)
+        } catch is CancellationError {
+            // The screen went away. Nothing to show.
         } catch {
-            self.error = auth.message(for: error)
+            // A 401 here means wrong credentials, not an expired session, so show the server's message.
+            self.error = error.localizedDescription
         }
     }
 }
